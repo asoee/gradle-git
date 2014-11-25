@@ -15,6 +15,9 @@
  */
 package org.ajoberstar.gradle.git.release.base
 
+import com.github.zafarkhaja.semver.Version
+import org.ajoberstar.gradle.git.release.semver.NearestVersion
+import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import spock.lang.Specification
 
 import org.ajoberstar.grgit.Grgit
@@ -78,10 +81,11 @@ class BaseReleasePluginSpec extends Specification {
 		repo.tag >> tag
 		branch.current >> new Branch(fullName: 'refs/heads/master')
 		project.release {
+			locator = mockLocator(new NearestVersion(any: Version.valueOf('1.2.2')))
 			versionStrategy([
 				getName: { 'a' },
 				selector: {proj, repo2 -> true },
-				infer: {proj, repo2 -> new ReleaseVersion('1.2.3', null, true)}] as VersionStrategy)
+				infer: {proj, repo2, nearest -> new ReleaseVersion('1.2.3', null, true)}] as VersionStrategy)
 			grgit = repo
 		}
 		when:
@@ -99,10 +103,11 @@ class BaseReleasePluginSpec extends Specification {
 		repo.tag >> tag
 		branch.current >> new Branch(fullName: 'refs/heads/master')
 		project.release {
+			locator = mockLocator(new NearestVersion(any: Version.valueOf('1.2.2')))
 			versionStrategy([
 				getName: { 'a' },
 				selector: {proj, repo2 -> true },
-				infer: {proj, repo2 -> new ReleaseVersion('1.2.3', null, false)}] as VersionStrategy)
+				infer: {proj, repo2, nearest -> new ReleaseVersion('1.2.3', null, false)}] as VersionStrategy)
 			grgit = repo
 		}
 		when:
@@ -110,4 +115,11 @@ class BaseReleasePluginSpec extends Specification {
 		then:
 		1 * repo.push([remote: 'origin', refsOrSpecs: ['refs/heads/master']])
 	}
+
+	private def mockLocator(NearestVersion nearest) {
+		NearestVersionLocator locator = Mock()
+		locator.locate(_) >> nearest
+		return locator
+	}
+
 }

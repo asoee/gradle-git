@@ -115,12 +115,12 @@ final class SemVerStrategy implements VersionStrategy {
 	 * the version precedence will be enforced, if required by this strategy.
 	 */
 	@Override
-	ReleaseVersion infer(Project project, Grgit grgit) {
-		return doInfer(project, grgit, new NearestVersionLocator())
+	ReleaseVersion infer(Project project, Grgit grgit, NearestVersion nearestVersion) {
+		return doInfer(project, grgit, nearestVersion)
 	}
 
 	@PackageScope
-	ReleaseVersion doInfer(Project project, Grgit grgit, NearestVersionLocator locator) {
+	ReleaseVersion doInfer(Project project, Grgit grgit, NearestVersion nearestVersion) {
 		ChangeScope scope = getPropertyOrNull(project, SCOPE_PROP).with { scope ->
 			scope == null ? null : ChangeScope.valueOf(scope.toUpperCase())
 		}
@@ -130,7 +130,6 @@ final class SemVerStrategy implements VersionStrategy {
 		}
 		logger.info('Beginning version inference using {} strategy and input scope ({}) and stage ({})', name, scope, stage)
 
-		NearestVersion nearestVersion = locator.locate(grgit)
 		logger.debug('Located nearest version: {}', nearestVersion)
 
 		SemVerStrategyState state = new SemVerStrategyState(

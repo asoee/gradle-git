@@ -15,6 +15,9 @@
  */
 package org.ajoberstar.gradle.git.release.base
 
+import com.github.zafarkhaja.semver.Version
+import org.ajoberstar.gradle.git.release.semver.NearestVersion
+import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import spock.lang.Specification
 
 import org.ajoberstar.grgit.Grgit
@@ -29,14 +32,15 @@ class ReleasePluginExtensionSpec extends Specification {
 		Project project = ProjectBuilder.builder().build()
 		ReleasePluginExtension extension = new ReleasePluginExtension(project)
 		extension.grgit = GroovyMock(Grgit)
+		extension.locator = mockLocator(new NearestVersion(any: Version.valueOf('1.2.3')))
 		extension.versionStrategy([
 			getName: { 'b' },
 			selector: { proj, grgit -> false },
-			infer: { proj, grgit -> new ReleaseVersion('1.0.0', null, true) }] as VersionStrategy)
+			infer: { proj, grgit, nearest -> new ReleaseVersion('1.0.0', null, true) }] as VersionStrategy)
 		extension.defaultVersionStrategy = [
 			getName: { 'a' },
 			selector: { proj, grgit -> false },
-			infer: { proj, grgit -> new ReleaseVersion('1.2.3', null, true) }] as VersionStrategy
+			infer: { proj, grgit, nearest -> new ReleaseVersion('1.2.3', null, true) }] as VersionStrategy
 		expect:
 		project.version.toString() == '1.2.3'
 	}
@@ -45,14 +49,15 @@ class ReleasePluginExtensionSpec extends Specification {
 		Project project = ProjectBuilder.builder().build()
 		ReleasePluginExtension extension = new ReleasePluginExtension(project)
 		extension.grgit = GroovyMock(Grgit)
+        extension.locator = mockLocator(new NearestVersion(any: Version.valueOf('1.2.3')))
 		extension.versionStrategy([
 			getName: { 'b' },
 			selector: { proj, grgit -> false },
-			infer: { proj, grgit -> new ReleaseVersion('1.0.0', null, true) }] as VersionStrategy)
+			infer: { proj, grgit, nearest -> new ReleaseVersion('1.0.0', null, true) }] as VersionStrategy)
 		extension.versionStrategy([
 			getName: { 'a' },
 			selector: { proj, grgit -> true },
-			infer: { proj, grgit -> new ReleaseVersion('1.2.3', null, true) }] as VersionStrategy)
+			infer: { proj, grgit, nearest -> new ReleaseVersion('1.2.3', null, true) }] as VersionStrategy)
 		expect:
 		project.version.toString() == '1.2.3'
 	}
@@ -61,14 +66,15 @@ class ReleasePluginExtensionSpec extends Specification {
 		Project project = ProjectBuilder.builder().build()
 		ReleasePluginExtension extension = new ReleasePluginExtension(project)
 		extension.grgit = GroovyMock(Grgit)
+        extension.locator = mockLocator(new NearestVersion(any: Version.valueOf('1.2.3')))
 		extension.versionStrategy([
 			getName: { 'b' },
 			selector: { proj, grgit -> true },
-			infer: { proj, grgit -> new ReleaseVersion('1.0.0', null, true) }] as VersionStrategy)
+			infer: { proj, grgit, nearest -> new ReleaseVersion('1.0.0', null, true) }] as VersionStrategy)
 		extension.versionStrategy([
 			getName: { 'a' },
 			selector: { proj, grgit -> true },
-			infer: { proj, grgit -> new ReleaseVersion('1.2.3', null, true) }] as VersionStrategy)
+			infer: { proj, grgit, nearest -> new ReleaseVersion('1.2.3', null, true) }] as VersionStrategy)
 		expect:
 		project.version.toString() == '1.0.0'
 	}
@@ -77,17 +83,24 @@ class ReleasePluginExtensionSpec extends Specification {
 		Project project = ProjectBuilder.builder().build()
 		ReleasePluginExtension extension = new ReleasePluginExtension(project)
 		extension.grgit = GroovyMock(Grgit)
+        extension.locator = mockLocator(new NearestVersion(any: Version.valueOf('1.2.3')))
 		extension.versionStrategy([
 			getName: { 'b' },
 			selector: { proj, grgit -> false },
-			infer: { proj, grgit -> new ReleaseVersion('1.0.0', null, true) }] as VersionStrategy)
+			infer: { proj, grgit, nearest -> new ReleaseVersion('1.0.0', null, true) }] as VersionStrategy)
 		extension.versionStrategy([
 			getName: { 'a' },
 			selector: { proj, grgit -> false },
-			infer: { proj, grgit -> new ReleaseVersion('1.2.3', null, true) }] as VersionStrategy)
+			infer: { proj, grgit, nearest -> new ReleaseVersion('1.2.3', null, true) }] as VersionStrategy)
 		when:
 		project.version.toString()
 		then:
 		thrown(GradleException)
 	}
+
+    private def mockLocator(NearestVersion nearest) {
+        NearestVersionLocator locator = Mock()
+        locator.locate(_) >> nearest
+        return locator
+    }
 }

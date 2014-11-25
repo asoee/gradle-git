@@ -17,7 +17,7 @@ package org.ajoberstar.gradle.git.release.semver
 
 import com.github.zafarkhaja.semver.ParseException
 import com.github.zafarkhaja.semver.Version
-
+import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.grgit.Commit
 import org.ajoberstar.grgit.Grgit
 
@@ -40,6 +40,11 @@ import org.slf4j.LoggerFactory
 class NearestVersionLocator {
 	private static final Logger logger = LoggerFactory.getLogger(NearestVersionLocator)
 
+	private TagStrategy tagStrategy;
+
+	NearestVersionLocator(TagStrategy tagStrategy) {
+		this.tagStrategy= tagStrategy;
+	}
 	/**
 	 * Locate the nearest version in the given repository
 	 * starting from the current HEAD.
@@ -77,8 +82,8 @@ class NearestVersionLocator {
 		Commit head = grgit.head()
 		List versionTags = grgit.tag.list().inject([]) { list, tag ->
 			Version version = parseAsVersion(tag.name)
-			logger.debug('Tag {} ({}) parsed as {} version.', tag.name, tag.commit.abbreviatedId, version)
 			if (version) {
+				logger.debug('Tag {} ({}) parsed as {} version.', tag.name, tag.commit.abbreviatedId, version)
 				def data
 				if (tag.commit == head) {
 					logger.debug('Tag {} is at head. Including as candidate.', tag.fullName)
@@ -124,18 +129,12 @@ class NearestVersionLocator {
 
 	protected Version parseAsVersion(String name) {
 		try {
-			return Version.valueOf(extractName(name))
+			def extracted = tagStrategy.extractName(name)
+			return extracted != null ? Version.valueOf(extracted) : null;
 		} catch (ParseException e) {
 			logger.debug('Invalid version string: {}', name)
 			return null
 		}
 	}
 
-	protected String extractName(String tagName) {
-		if (tagName.charAt(0) == 'v') {
-			return tagName[1..-1]
-		} else {
-			return tagName
-		}
-	}
 }

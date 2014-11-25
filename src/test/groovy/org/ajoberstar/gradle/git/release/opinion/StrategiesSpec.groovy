@@ -305,9 +305,9 @@ class StrategiesSpec extends Specification {
 		given:
 		def project = mockProject(scope, stage)
 		def grgit = mockGrgit(repoDirty)
-		def locator = mockLocator(nearestNormal, nearestAny)
+		def nearest = mockNearest(nearestNormal, nearestAny)
 		expect:
-		Strategies.SNAPSHOT.doInfer(project, grgit, locator) == new ReleaseVersion(expected, nearestNormal, false)
+		Strategies.SNAPSHOT.doInfer(project, grgit, nearest) == new ReleaseVersion(expected, nearestNormal, false)
 		where:
 		scope   | stage      | nearestNormal | nearestAny   | repoDirty | expected
 		null    | null       | '1.0.0'       | '1.0.0'      | false     | '1.0.1-SNAPSHOT'
@@ -323,9 +323,9 @@ class StrategiesSpec extends Specification {
 		given:
 		def project = mockProject(scope, stage)
 		def grgit = mockGrgit(repoDirty)
-		def locator = mockLocator(nearestNormal, nearestAny)
+		def nearest = mockNearest(nearestNormal, nearestAny)
 		expect:
-		Strategies.DEVELOPMENT.doInfer(project, grgit, locator) == new ReleaseVersion(expected, nearestNormal, false)
+		Strategies.DEVELOPMENT.doInfer(project, grgit, nearest) == new ReleaseVersion(expected, nearestNormal, false)
 		where:
 		scope   | stage      | nearestNormal | nearestAny      | repoDirty | expected
 		null    | null       | '1.0.0'       | '1.0.0'         | false     | '1.0.1-dev.2+5e9b2a1'
@@ -341,9 +341,9 @@ class StrategiesSpec extends Specification {
 	def 'PRE_RELEASE works as expected'() {
 		def project = mockProject(scope, stage)
 		def grgit = mockGrgit(repoDirty)
-		def locator = mockLocator(nearestNormal, nearestAny)
+		def nearest = mockNearest(nearestNormal, nearestAny)
 		expect:
-		Strategies.PRE_RELEASE.doInfer(project, grgit, locator) == new ReleaseVersion(expected, nearestNormal, true)
+		Strategies.PRE_RELEASE.doInfer(project, grgit, nearest) == new ReleaseVersion(expected, nearestNormal, true)
 		where:
 		scope   | stage       | nearestNormal | nearestAny          | repoDirty | expected
 		null    | null        | '1.0.0'       | '1.0.0'             | false     | '1.0.1-milestone.1'
@@ -361,9 +361,9 @@ class StrategiesSpec extends Specification {
 	def 'Strategies.FINAL works as expected'() {
 		def project = mockProject(scope, stage)
 		def grgit = mockGrgit(repoDirty)
-		def locator = mockLocator(nearestNormal, nearestAny)
+		def nearest = mockNearest(nearestNormal, nearestAny)
 		expect:
-		Strategies.FINAL.doInfer(project, grgit, locator) == new ReleaseVersion(expected, nearestNormal, true)
+		Strategies.FINAL.doInfer(project, grgit, nearest) == new ReleaseVersion(expected, nearestNormal, true)
 		where:
 		scope   | stage       | nearestNormal | nearestAny          | repoDirty | expected
 		null    | null        | '1.0.0'       | '1.0.0'             | false     | '1.0.1'
@@ -412,4 +412,14 @@ class StrategiesSpec extends Specification {
 		)
 		return locator
 	}
+
+	def mockNearest(String nearestNormal, String nearestAny) {
+		return new NearestVersion(
+				normal: Version.valueOf(nearestNormal),
+				distanceFromNormal: 5,
+				any: Version.valueOf(nearestAny),
+				distanceFromAny: 2
+		)
+	}
+
 }

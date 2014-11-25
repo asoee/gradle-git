@@ -15,6 +15,7 @@
  */
 package org.ajoberstar.gradle.git.release.base
 
+import org.ajoberstar.gradle.git.release.semver.NearestVersion
 import org.ajoberstar.grgit.Grgit
 
 import org.gradle.api.Project
@@ -47,5 +48,5 @@ interface VersionStrategy {
 	 * @param grgit the repository the version should be inferred from
 	 * @return the inferred version
 	 */
-	ReleaseVersion infer(Project project, Grgit grgit)
+	ReleaseVersion infer(Project project, Grgit grgit, NearestVersion nearestVersion)
 }

@@ -80,10 +80,9 @@ class SemVerStrategySpec extends Specification {
 		def nearest = new NearestVersion(
 			normal: Version.valueOf('1.2.2'),
 			any: Version.valueOf(nearestAny))
-		def locator = mockLocator(nearest)
 		def strategy = mockStrategy(scope, stage, nearest, createTag, enforcePrecedence)
 		expect:
-		strategy.doInfer(project, grgit, locator) == new ReleaseVersion('1.2.3-beta.1+abc123', '1.2.2', createTag)
+		strategy.doInfer(project, grgit, nearest) == new ReleaseVersion('1.2.3-beta.1+abc123', '1.2.2', createTag)
 		where:
 		scope   | stage | nearestAny | createTag | enforcePrecedence
 		'patch' | 'one' | '1.2.3'    | true      | false
@@ -107,10 +106,9 @@ class SemVerStrategySpec extends Specification {
 		mockRepoClean(false)
 		mockBranchService()
 		def nearest = new NearestVersion(any: Version.valueOf('1.2.3'))
-		def locator = mockLocator(nearest)
 		def strategy = mockStrategy(null, 'and', nearest, false, true)
 		when:
-		strategy.doInfer(project, grgit, locator)
+		strategy.doInfer(project, grgit, nearest)
 		then:
 		thrown(GradleException)
 	}

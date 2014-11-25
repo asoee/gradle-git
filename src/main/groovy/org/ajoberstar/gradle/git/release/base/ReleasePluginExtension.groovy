@@ -18,6 +18,8 @@ package org.ajoberstar.gradle.git.release.base
 import org.ajoberstar.gradle.git.release.base.ReleaseVersion
 import org.ajoberstar.gradle.git.release.base.TagStrategy
 import org.ajoberstar.gradle.git.release.base.VersionStrategy
+import org.ajoberstar.gradle.git.release.semver.NearestVersion
+import org.ajoberstar.gradle.git.release.semver.NearestVersionLocator
 import org.ajoberstar.grgit.Grgit
 import org.ajoberstar.grgit.util.ConfigureUtil
 
@@ -66,6 +68,9 @@ class ReleasePluginExtension {
 	 */
 	String remote = 'origin'
 
+
+	def locator = new NearestVersionLocator(tagStrategy)
+
 	ReleasePluginExtension(Project project) {
 		this.project = project
 		project.version = new DelayedVersion()
@@ -93,6 +98,10 @@ class ReleasePluginExtension {
 		ConfigureUtil.configure(tagStrategy, closure)
 	}
 
+	void locator(Closure closure) {
+		ConfigureUtil.configure(locator, closure)
+	}
+
 	// TODO: Decide if this should be thread-safe.
 	private class DelayedVersion {
 		ReleaseVersion inferredVersion
@@ -111,7 +120,8 @@ class ReleasePluginExtension {
 				}
 			}
 
-			inferredVersion = selectedStrategy.infer(project, grgit)
+			def nearestVersion = locator.locate(grgit)
+			inferredVersion = selectedStrategy.infer(project, grgit, nearestVersion)
 		}
 
 		@Override
